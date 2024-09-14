@@ -1,18 +1,19 @@
 #include <iostream>
 #include <cstring>
-#include <vector>
 #include <algorithm> 
 #include <ctime>  
+#include <conio.h>
 
-int xx = 2;
-int yy = 1;
+int xx = 0;
+int yy = 0;
 
 class Estados{
 public:
 
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
 
-    Estados sucessao(int input){ // 0 (<-) // 1 (^) // 2 (->) // 3 (v)
+    //função que retorna um objeto de Estado novo após um input
+    Estados sucessao(char input){ // 0 (<-) // 1 (^) // 2 (->) // 3 (v)
         Estados novoEstado;
 
         memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); //copia o tabuleiro do estado atual pro novo
@@ -21,10 +22,10 @@ public:
         int y = yy;
 
         switch(input){
-            case 0: y--; break; //x vai pra esquerda
-            case 1: x--; break; //y vai pra cima
-            case 2: y++; break; //x vai para direita
-            case 3: x++ ; break; //y vai para baixo
+            case 'a': y--; break; //x vai pra esquerda
+            case 'w': x--; break; //y vai pra cima
+            case 'd': y++; break; //x vai para direita
+            case 's': x++ ; break; //y vai para baixo
         }
 
         if(x >= 0 && x < 3 && y >= 0 && y < 3){ //verifica se ta dentro do possível
@@ -35,6 +36,7 @@ public:
         return novoEstado;
     }
 
+    //Função que imprime o Estado atual
     void imprimeTabuleiro() {
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
@@ -45,6 +47,7 @@ public:
         std::cout << "-----" << std::endl;
     }
 
+    //Função que verifica se o Estado atual é o final e retorna true ou false
     bool checkForWin(){
         int resp[3][3] = {{1,2,3},{4,5,6},{7,8,0}}; //tabuleiro de resposta
 
@@ -54,6 +57,7 @@ public:
         else{ return false;}
     }
 
+    //Verifica se o Estado inicial é resolviveu
     bool isSolvable(){
         int flatPuzzle[9]; // Array para linearizar o tabuleiro
         int index = 0;
@@ -79,13 +83,11 @@ public:
         return (inversions % 2 == 0);
     }
 
+    //Cria um Estado inicial resolvivel
     void createTabuleiro(){
-        int numbers[9];
+        
+        int numbers[9] = {0,1,2,3,4,5,6,7,8};
         while(this->isSolvable() == false){
-
-        for (int i = 0; i < 9; ++i) {
-            numbers[i] = i;
-        }
 
         std::srand(time(0)); 
         std::random_shuffle(numbers, numbers + 9);
@@ -94,18 +96,46 @@ public:
         int index = 0;
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
-                tabuleiro[i][j] = numbers[index++];
+                this->tabuleiro[i][j] = numbers[index++];
+                if (this->tabuleiro[i][j] == 0){
+                    xx = i;
+                    yy = j; //atualiza as coordenadas globais
+                }
             }
         }
         }
     }
 };
 
+class Game{
+public:
+
+    void startGame(){
+
+        Estados novoJogo;
+        novoJogo.createTabuleiro();
+        novoJogo.imprimeTabuleiro();
+
+        char input_teclado;
+
+        while(novoJogo.checkForWin() == false){
+            do {
+            input_teclado = _getch();
+            if (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd') {
+            std::cout << "Entrada invalida" << std::endl;
+            }
+            }while (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd');
+            
+            novoJogo = novoJogo.sucessao(input_teclado);
+            novoJogo.imprimeTabuleiro();
+        }
+    }
+};
+
 int main(){
 
-    Estados novoJogo;
-    novoJogo.createTabuleiro();
-    novoJogo.imprimeTabuleiro();
+    Game newGame;
+    newGame.startGame();
 
     return 0;
 }

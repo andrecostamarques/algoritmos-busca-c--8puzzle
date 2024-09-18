@@ -3,17 +3,18 @@
 #include <algorithm> 
 #include <ctime>  
 #include <conio.h>
+#include <locale.h> 
+#include <windows.h>
 
 int xx = 0;
 int yy = 0;
 
 class Estados{
 public:
-
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
 
     //função que retorna um objeto de Estado novo após um input
-    Estados sucessao(char input){ // 0 (<-) // 1 (^) // 2 (->) // 3 (v)
+    Estados sucessao(char input){ // a (<-) // w (^) // d (->) // s (v)
         Estados novoEstado;
 
         memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); //copia o tabuleiro do estado atual pro novo
@@ -29,8 +30,8 @@ public:
         }
 
         if(x >= 0 && x < 3 && y >= 0 && y < 3){ //verifica se ta dentro do possível
-        std::swap(novoEstado.tabuleiro[x][y], novoEstado.tabuleiro[xx][yy]); //faz a troca dos valores
-        xx = x; yy = y; //atualiza as coordenadas gerais
+            std::swap(novoEstado.tabuleiro[x][y], novoEstado.tabuleiro[xx][yy]); //faz a troca dos valores
+            xx = x; yy = y; //atualiza as coordenadas gerais
         }
 
         return novoEstado;
@@ -111,30 +112,54 @@ class Game{
 public:
 
     void startGame(){
-
         Estados novoJogo;
+        std::cout << "\033[2J\033[1;1H";
+        std::cout << "INITIAL STATE" << std::endl;
         novoJogo.createTabuleiro();
         novoJogo.imprimeTabuleiro();
 
+        std::cout << "Choose an option!\n[1] PLAY\n[2] ALGORITHM" << std::endl;
+        std::cout << "\n>> ";
+        
         char input_teclado;
+        std::cin >> input_teclado;
 
-        while(novoJogo.checkForWin() == false){
-            do {
-            input_teclado = _getch();
-            if (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd') {
-            std::cout << "Entrada invalida" << std::endl;
-            }
-            }while (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd');
-            
-            //empilha o estado atual
-            novoJogo = novoJogo.sucessao(input_teclado); 
-            novoJogo.imprimeTabuleiro();
+        switch (input_teclado) {
+            case '1':
+                std::cout << "\033[2J\033[1;1H";
+                novoJogo.imprimeTabuleiro();
+                while(novoJogo.checkForWin() == false){
+                    do {
+                        std::cout << "You have to move zero using WASD" << std::endl;
+                        std::cout << ">> ";
+                        input_teclado = _getch();
+                        std::cout << input_teclado;
+                        std::cout << "\n-----\n";
+                        if (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd') {
+                            std::cout << "INVALID INPUT!" << std::endl;
+                        }
+                    } while (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd');
+                    
+                    novoJogo = novoJogo.sucessao(input_teclado);
+                    novoJogo.imprimeTabuleiro();
+                }
+                break;
+            case '2':
+                std::cout << "\033[2J\033[1;1H";
+                //novoJogo.imprimeTabuleiro();
+                std::cout << "Choose the algorithm\n[1] A*\n[2] BSF\n[3] DFS" << std::endl;
+                std::cout << "\n>> ";
+
+                char algoritmo;
+                std::cin >> algoritmo;
+                break;
         }
+        
     }
 };
 
-int main(){
-
+int main()
+{
     Game newGame;
     newGame.startGame();
 

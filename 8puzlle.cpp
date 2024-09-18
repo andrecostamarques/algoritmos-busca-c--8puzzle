@@ -126,7 +126,8 @@ public:
             }
             }while (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd');
             
-            novoJogo = novoJogo.sucessao(input_teclado);
+            //empilha o estado atual
+            novoJogo = novoJogo.sucessao(input_teclado); 
             novoJogo.imprimeTabuleiro();
         }
     }

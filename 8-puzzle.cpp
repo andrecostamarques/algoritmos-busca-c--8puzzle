@@ -9,9 +9,9 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+#include <queue>
 
-int xx = 0; 
-int yy = 0;
+int state = 0;
 // Variaveis de localização do 0, são globais 
 
 std::unordered_map<int, int> mapEstadosVisitados;
@@ -20,9 +20,9 @@ std::unordered_map<int, int> mapEstadosVisitados;
 
 class Estados{
 public:
+
+    int y, x;
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
-    int x_estado = xx;
-    int y_estado = yy;
     // Necessário salvar a localização do 0 no Estado atual para o histórico.
    
     // A função insere o Estado atual na HashTable e retorna um objeto de novo Estado.
@@ -33,23 +33,24 @@ public:
         memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); 
         // Copia o tabuleiro do estado atual pro novo
 
-        int x = xx;
-        int y = yy;
+        int x2 = x;
+        int y2 = y;
 
         switch(input){
-            case 'a': y--; break; // x vai pra esquerda
-            case 'w': x--; break; // y vai pra cima
-            case 'd': y++; break; // x vai para direita
-            case 's': x++ ; break;// y vai para baixo
+            case 'a': y2--; break; // x vai pra esquerda
+            case 'w': x2--; break; // y vai pra cima
+            case 'd': y2++; break; // x vai para direita
+            case 's': x2++ ; break;// y vai para baixo
         }
 
-        if(x >= 0 && x < 3 && y >= 0 && y < 3){ 
-            std::swap(novoEstado.tabuleiro[x][y], novoEstado.tabuleiro[xx][yy]); 
-            xx = x; yy = y; 
+        if(x2 >= 0 && x2 < 3 && y2 >= 0 && y2 < 3){ 
+            std::swap(novoEstado.tabuleiro[x2][y2], novoEstado.tabuleiro[x][y]); 
+            novoEstado.x = x2; novoEstado.y = y2; 
+            ++state;
             // Faz a verificação da mudança do estado, atualiza o tabuleiro e as variaveis globais
         }
 
-        mapEstadosVisitados.insert({intflatTabuleiro(this->tabuleiro, sizeof(this->tabuleiro)), 1}); 
+        //mapEstadosVisitados.insert({intflatTabuleiro(this->tabuleiro, sizeof(this->tabuleiro)), 1}); 
         // Insere o Estado atual na HashTable
 
         return novoEstado;
@@ -57,6 +58,7 @@ public:
 
     // Imprime o Estado atual
     void imprimeTabuleiro() {
+        std::cout << "STATE " << state << std::endl; 
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
                 std::cout << this->tabuleiro[i][j] << " ";
@@ -113,8 +115,8 @@ public:
             for (int j = 0; j < 3; ++j) {
                 this->tabuleiro[i][j] = numbers[index++];
                 if (this->tabuleiro[i][j] == 0){
-                    xx = i;
-                    yy = j; 
+                    this->x = i;
+                    this->y = j; 
                     // Atualizam as coordenadas globais
                 }
             }
@@ -172,7 +174,6 @@ public:
     void startGame(){
         Estados novoJogo;
         std::cout << "\033[2J\033[1;1H";
-        std::cout << "INITIAL STATE" << std::endl;
         novoJogo.createTabuleiro();
         novoJogo.imprimeTabuleiro();
 
@@ -209,7 +210,8 @@ public:
                 //novoJogo.imprimeTabuleiro();
                 std::cout << "Choose the algorithm\n[1] A*\n[2] BSF\n[3] DFS" << std::endl;
                 std::cout << "\n>> ";
-
+                //Astar aestrela(novoJogo);
+                //aestrela.resolver()
                 char algoritmo;
                 std::cin >> algoritmo;
                 break;
@@ -220,14 +222,24 @@ public:
 
 
 class Solver{
+public:
+    std::queue<Estados> filaVisita;
+    Estados atual;
 
+    Solver(Estados estadoPai){
+        atual = estadoPai;
+    }
 };
 
 class Astar : public Solver{
+    //contrutor filho
+        //construtor pai (estado inical)
 
+    //metodo resolver
+        //algoritmos algoritmos algoritmos
 };
 
-class BSF : public Solver{
+class BFS : public Solver{
 
 };
 

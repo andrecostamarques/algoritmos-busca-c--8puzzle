@@ -213,15 +213,20 @@ public:
     }
 };
 
-class Astar{
+
+class Solver{
 
 };
 
-class BSF{
+class Astar : public Solver{
 
 };
 
-class DFS{
+class BSF : public Solver{
+
+};
+
+class DFS : public Solver{
 
 };
 

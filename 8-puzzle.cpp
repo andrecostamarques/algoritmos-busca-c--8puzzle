@@ -15,15 +15,19 @@ int yy = 0;
 // Variaveis de localização do 0, são globais 
 
 std::unordered_map<int, int> mapEstadosVisitados;
-// chave é o idEstado | valor é inutil, porém 1 é visto e 0 não
-// cada estado assim que descoberto, vai pra HashTable de descuberto com o seu idEstado, a partir disso, dá para descobrir se foi visitado em O(1)
+// Chave é o idEstado | valor é inutil, porém 1 é visto e 0 não
+// Cada estado assim que descoberto, vai pra HashTable de descuberto com o seu idEstado, a partir disso, dá para descobrir se foi visitado em O(1)
 
 class Estados{
 public:
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
+    int x_estado = xx;
+    int y_estado = yy;
+    // Necessário salvar a localização do 0 no Estado atual para o histórico.
    
     // A função insere o Estado atual na HashTable e retorna um objeto de novo Estado.
     Estados sucessao(char input){ 
+
         Estados novoEstado;
         
         memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); 
@@ -60,6 +64,7 @@ public:
             std::cout << std::endl;
         }
         std::cout << "-----" << std::endl;
+        verMemoria(this->tabuleiro, sizeof(this->tabuleiro));
     }
 
     // Verifica se o Estado é o final.
@@ -149,14 +154,14 @@ public:
     return concat;
     }
 
-//     void verMemoria(void* ptr, size_t tamanho) { // So para debuggar quando tiver usando memória
-//     unsigned char* bytePtr = static_cast<unsigned char*>(ptr);
+    void verMemoria(void* ptr, size_t tamanho) { // So para debuggar quando tiver usando memória
+    unsigned char* bytePtr = static_cast<unsigned char*>(ptr);
 
-//     for (size_t i = 0; i < tamanho; ++i) {
-//         std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)bytePtr[i] << " ";
-//     }
-//     std::cout << std::dec << std::endl;  // Volta para o formato decimal
-// }
+    for (size_t i = 0; i < tamanho; ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)bytePtr[i] << " ";
+    }
+    std::cout << std::dec << std::endl;  // Volta para o formato decimal
+}
 
 
 };

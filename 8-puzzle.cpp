@@ -5,39 +5,53 @@
 #include <conio.h>
 #include <locale.h> 
 #include <windows.h>
+#include <iomanip>
+#include <cmath>
+#include <string>
+#include <unordered_map>
 
-int xx = 0;
+int xx = 0; 
 int yy = 0;
+// Variaveis de localização do 0, são globais 
+
+std::unordered_map<int, int> mapEstadosVisitados;
+// chave é o idEstado | valor é inutil, porém 1 é visto e 0 não
+// cada estado assim que descoberto, vai pra HashTable de descuberto com o seu idEstado, a partir disso, dá para descobrir se foi visitado em O(1)
 
 class Estados{
 public:
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
-
-    //função que retorna um objeto de Estado novo após um input
-    Estados sucessao(char input){ // a (<-) // w (^) // d (->) // s (v)
+   
+    // A função insere o Estado atual na HashTable e retorna um objeto de novo Estado.
+    Estados sucessao(char input){ 
         Estados novoEstado;
-
-        memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); //copia o tabuleiro do estado atual pro novo
+        
+        memcpy(novoEstado.tabuleiro, this->tabuleiro, 3 * 3 * sizeof(int)); 
+        // Copia o tabuleiro do estado atual pro novo
 
         int x = xx;
         int y = yy;
 
         switch(input){
-            case 'a': y--; break; //x vai pra esquerda
-            case 'w': x--; break; //y vai pra cima
-            case 'd': y++; break; //x vai para direita
-            case 's': x++ ; break; //y vai para baixo
+            case 'a': y--; break; // x vai pra esquerda
+            case 'w': x--; break; // y vai pra cima
+            case 'd': y++; break; // x vai para direita
+            case 's': x++ ; break;// y vai para baixo
         }
 
-        if(x >= 0 && x < 3 && y >= 0 && y < 3){ //verifica se ta dentro do possível
-            std::swap(novoEstado.tabuleiro[x][y], novoEstado.tabuleiro[xx][yy]); //faz a troca dos valores
-            xx = x; yy = y; //atualiza as coordenadas gerais
+        if(x >= 0 && x < 3 && y >= 0 && y < 3){ 
+            std::swap(novoEstado.tabuleiro[x][y], novoEstado.tabuleiro[xx][yy]); 
+            xx = x; yy = y; 
+            // Faz a verificação da mudança do estado, atualiza o tabuleiro e as variaveis globais
         }
+
+        mapEstadosVisitados.insert({intflatTabuleiro(this->tabuleiro, sizeof(this->tabuleiro)), 1}); 
+        // Insere o Estado atual na HashTable
 
         return novoEstado;
     }
 
-    //Função que imprime o Estado atual
+    // Imprime o Estado atual
     void imprimeTabuleiro() {
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
@@ -48,43 +62,38 @@ public:
         std::cout << "-----" << std::endl;
     }
 
-    //Função que verifica se o Estado atual é o final e retorna true ou false
+    // Verifica se o Estado é o final.
     bool checkForWin(){
-        int resp[3][3] = {{1,2,3},{4,5,6},{7,8,0}}; //tabuleiro de resposta
+        int resp[3][3] = {{1,2,3},{4,5,6},{7,8,0}}; 
+        // Compara com o resultaod esperado.
 
-        if(memcmp(&resp, &this->tabuleiro, sizeof(resp)) == 0){ //compara os blocos de memória para ver se são iguais
+        if(memcmp(&resp, &this->tabuleiro, sizeof(resp)) == 0){ 
         std::cout << "Vitoria!" << std::endl;
-        return true;} // Matrizes são iguais
+        return true;}
+        // O bloco inteiro de memória do tabuleiro no Heap é comparado, assim, é evitado o uso de For dentro de For.
         else{ return false;}
     }
 
-    //Verifica se o Estado inicial é resolviveu
+    // Verifica se o Estado inicial é solvable
     bool isSolvable(){
-        int flatPuzzle[9]; // Array para linearizar o tabuleiro
-        int index = 0;
-
-        // Transforma a matriz em um array unidimensional
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                flatPuzzle[index++] = this->tabuleiro[i][j];
-            }
-        }
+        int* flatPuzzle = (int*)malloc(9 * sizeof(int));
+        flatTabuleiro(this->tabuleiro, sizeof(this->tabuleiro), flatPuzzle);
+        // Um ponteiro recebe o tabuleiro dentro de um vetor
 
         int inversions = 0;
         for (int i = 0; i < 9 - 1; ++i) {
             for (int j = i + 1; j < 9; ++j) {
-                // Ignora o zero na contagem de inversões
+            // Ignora o zero na contagem
                 if (flatPuzzle[i] && flatPuzzle[j] && flatPuzzle[i] > flatPuzzle[j]) {
                     inversions++;
                 }
             }
         }
-        
-        // O puzzle é solucionável se o número de inversões for par
+        free(flatPuzzle);
         return (inversions % 2 == 0);
     }
 
-    //Cria um Estado inicial resolvivel
+    // Cria um Estado inicial soluvel
     void createTabuleiro(){
         
         int numbers[9] = {0,1,2,3,4,5,6,7,8};
@@ -100,12 +109,56 @@ public:
                 this->tabuleiro[i][j] = numbers[index++];
                 if (this->tabuleiro[i][j] == 0){
                     xx = i;
-                    yy = j; //atualiza as coordenadas globais
+                    yy = j; 
+                    // Atualizam as coordenadas globais
                 }
             }
         }
         }
     }
+
+    // Retorna void, recebe um ponteiro para o inicio do tabuleiro e o tamanho do tabuleiro.
+    // Printa o tabuleiro no formato de array.
+    void flatTabuleiro(void* ptr, size_t tamanho) {
+    unsigned char* bytePtr = static_cast<unsigned char*>(ptr); 
+    // Hack para poder ver o valor do numero (char tem exatamente 1 byte (2 hexa))
+
+    for (size_t i = 0; i < tamanho; i += 4) { // Pegar 1 byte e pular 3
+        std::cout << (int)bytePtr[i] << " " ; // Byte é transformado de char (1 byte) para int (4 byte)
+    }
+    std::cout << std::endl; 
+    }
+
+    // Retorna void, recebe um ponteiro para o inicio do tabuleiro, o tamanho do tabuleiro, e o ponteiro para um vetor, esse vetor será modificado com a matriz flated.
+    void flatTabuleiro(void* ptr, size_t tamanho, int* ptrVetor) {
+    unsigned char* bytePtr = static_cast<unsigned char*>(ptr); 
+    for (size_t i = 0; i < tamanho; i += 4) {  
+        ptrVetor[i/4] = (int)bytePtr[i]; //Salva no vetor os números da matriz.
+    }
+    }
+
+    // Retorna um numero inteiro concatenado com todos os valores da matriz, recebe um ponteiro para o inicio do tabuleiro e o tamanho do tabuleiro.
+    // Retorna o ID para a HashTable
+    int intflatTabuleiro(void* ptr, size_t tamanho) { 
+    unsigned char* bytePtr = static_cast<unsigned char*>(ptr); 
+    std::string temp;
+    for (size_t i = 0; i < tamanho; i += 4) {  
+        temp.append(std::to_string((int)bytePtr[i])); // Transforma em String para concatenar de maneira mais facil
+    }
+    int concat = std::stoi(temp); // Transforma de string para Int.
+    return concat;
+    }
+
+//     void verMemoria(void* ptr, size_t tamanho) { // So para debuggar quando tiver usando memória
+//     unsigned char* bytePtr = static_cast<unsigned char*>(ptr);
+
+//     for (size_t i = 0; i < tamanho; ++i) {
+//         std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)bytePtr[i] << " ";
+//     }
+//     std::cout << std::dec << std::endl;  // Volta para o formato decimal
+// }
+
+
 };
 
 class Game{
@@ -137,6 +190,8 @@ public:
                         std::cout << "\n-----\n";
                         if (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd') {
                             std::cout << "INVALID INPUT!" << std::endl;
+                        } if(input_teclado == 27){
+                            exit(0);
                         }
                     } while (input_teclado != 'w' && input_teclado != 'a' && input_teclado != 's' && input_teclado != 'd');
                     
@@ -156,6 +211,18 @@ public:
         }
         
     }
+};
+
+class Astar{
+
+};
+
+class BSF{
+
+};
+
+class DFS{
+
 };
 
 int main()

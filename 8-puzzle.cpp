@@ -75,7 +75,7 @@ public:
         // Compara com o resultaod esperado.
 
         if(memcmp(&resp, &this->tabuleiro, sizeof(resp)) == 0){ 
-        std::cout << "Vitoria!" << std::endl;
+        std::cout << "Vitoria!\n" << std::endl;
         return true;}
         // O bloco inteiro de memória do tabuleiro no Heap é comparado, assim, é evitado o uso de For dentro de For.
         else{ return false;}
@@ -122,18 +122,6 @@ public:
             }
         }
         }
-    }
-
-    // Retorna void, recebe um ponteiro para o inicio do tabuleiro e o tamanho do tabuleiro.
-    // Printa o tabuleiro no formato de array.
-    void flatTabuleiro(void* ptr) {
-    unsigned char* bytePtr = static_cast<unsigned char*>(ptr); 
-    // Hack para poder ver o valor do numero (char tem exatamente 1 byte (2 hexa))
-
-    for (size_t i = 0; i < (3 * 3 * sizeof(int)); i += 4) { // Pegar 1 byte e pular 3
-        std::cout << (int)bytePtr[i] << " " ; // Byte é transformado de char (1 byte) para int (4 byte)
-    }
-    std::cout << std::endl; 
     }
 
     // Retorna void, recebe um ponteiro para o inicio do tabuleiro, o tamanho do tabuleiro, e o ponteiro para um vetor, esse vetor será modificado com a matriz flated.
@@ -196,7 +184,32 @@ public:
             std::cout << std::endl;
         }
     }
-}
+    }
+
+    void reconstrucao(Estados final){
+    // Não retorna nada, printa o caminho utilizado para chegar lá.
+
+    int estadoID = final.intflatTabuleiro(final.tabuleiro); // Vai retornar o Pai dele
+
+    while(estadoID != 1){       
+        // Acessa o mapa Hash e pega os PAIS do caminho que geraram o resultado final
+        int aux = mapEstadosVisitados[estadoID];
+        pilhaInt.push(aux);
+        estadoID = aux;
+    }
+
+    std::cout << "Quantidade de passos: " << pilhaInt.size() << std::endl; 
+    std::cout << "\nPressione ENTER para proximo passo." << std::endl;
+
+    pilhaInt.top();
+    while(!pilhaInt.empty() ){
+        estadoID = pilhaInt.top(); pilhaInt.pop();
+        getchar();
+        std::cout << "-----" << std::endl;
+        printMatriz(estadoID);
+
+    }
+    }
 
 };
 
@@ -232,30 +245,6 @@ public:
     }
     }
 
-    void reconstrucao(Estados final){
-        // Não retorna nada, printa o caminho utilizado para chegar lá.
-
-        int estadoID = final.intflatTabuleiro(final.tabuleiro); // Vai retornar o Pai dele
-
-        while(estadoID != 1){       
-            // Acessa o mapa Hash e pega os PAIS do caminho que geraram o resultado final
-            int aux = mapEstadosVisitados[estadoID];
-            pilhaInt.push(aux);
-            estadoID = aux;
-        }
-
-        std::cout << "Quantidade de passos: " << pilhaInt.size() << std::endl; 
-        std::cout << "\nPressione ENTER para proximo passo." << std::endl;
-
-        pilhaInt.top();
-        while(!pilhaInt.empty() ){
-            estadoID = pilhaInt.top(); pilhaInt.pop();
-            getchar();
-            std::cout << "-----" << std::endl;
-            printMatriz(estadoID);
-
-        }
-    }
 };
 
 class DFS : public Solver{
@@ -310,7 +299,7 @@ public:
                 std::cin >> input_teclado2;
                 
                 if(input_teclado2 == 1){
-                    std::cout << "\n Ainda precisa implementar." << std::endl;
+                    std::cout << "\n Ainda precisa implementar.\n" << std::endl;
                     exit(0);
                 }
 

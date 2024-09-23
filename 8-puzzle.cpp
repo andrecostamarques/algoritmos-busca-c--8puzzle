@@ -152,8 +152,6 @@ public:
 //     }
 //     std::cout << std::dec << std::endl;  // Volta para o formato decimal
 // }
-
-
 };
 class Solver{
 public:
@@ -201,13 +199,12 @@ public:
     std::cout << "Quantidade de passos: " << pilhaInt.size() << std::endl; 
     std::cout << "\nPressione ENTER para proximo passo." << std::endl;
 
-    pilhaInt.top();
+    pilhaInt.pop();
     while(!pilhaInt.empty() ){
         estadoID = pilhaInt.top(); pilhaInt.pop();
         getchar();
         std::cout << "-----" << std::endl;
         printMatriz(estadoID);
-
     }
     }
 

@@ -9,8 +9,10 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <queue>
 #include <stack>
+#include <vector>
 
 int state = 0;
 // Variaveis de localização do 0, são globais 
@@ -22,8 +24,16 @@ std::unordered_map<int, int> mapEstadosVisitados;
 class Estados{
 public:
 
-    int y, x;
+    // Só serve para a priority queue, não usa para nada.
+    bool operator<(const Estados& other) const {
+        // Defina a lógica de comparação
+        return true; // Comparar pelo atributo2 se atributo1 for igual
+    }
+    
+
+    int y, x, custo;
     int tabuleiro[3][3] = {{1,2,3},{4,5,6},{8,7,0}};
+    
     // Necessário salvar a localização do 0 no Estado atual para o histórico.
    
     // A função insere o Estado atual na HashTable e retorna um objeto de novo Estado.
@@ -84,6 +94,7 @@ public:
     // Verifica se o Estado inicial é solvable
     bool isSolvable(){
         int* flatPuzzle = (int*)malloc(9 * sizeof(int));
+        int vetor[9];
         flatTabuleiro(this->tabuleiro, flatPuzzle);
         // Um ponteiro recebe o tabuleiro dentro de um vetor
 
@@ -155,13 +166,15 @@ public:
 };
 class Solver{
 public:
+    // Inicialização das estruturas de dados que serão utilizados nos solver abaixo
     std::queue<Estados> filaVisita;
     std::stack<Estados> pilhaVisita;
+    std::priority_queue<std::pair<int, Estados>> filaPrioridadeVisita;
     std::stack<int> pilhaInt;
     Estados atual;
 
     Solver(Estados estadoRaiz){
-        atual = estadoRaiz;
+        atual = estadoRaiz; 
     }
 
     void printMatriz(int numero) {
@@ -186,7 +199,7 @@ public:
 
     void reconstrucao(Estados final){
     // Não retorna nada, printa o caminho utilizado para chegar lá.
-
+        char input;
         int estadoID = final.intflatTabuleiro(final.tabuleiro); // Vai retornar o Pai dele
 
         while(estadoID != 1){       
@@ -197,14 +210,15 @@ public:
         }
 
         std::cout << "Quantidade de passos: " << pilhaInt.size() << std::endl; 
-        std::cout << "\nPressione ENTER para proximo passo." << std::endl;
+        std::cout << "\nPressione ENTER para proximo passo. Pressione ESC para Sair." << std::endl;
 
         pilhaInt.pop();
         while(!pilhaInt.empty() ){
             estadoID = pilhaInt.top(); pilhaInt.pop();
-            getchar();
+            input = _getch();
+            if(input == 13){
             std::cout << "-----" << std::endl;
-            printMatriz(estadoID);
+            printMatriz(estadoID);} else if(input == 27){break;}
         }
     }
 
@@ -212,7 +226,79 @@ public:
 
 class Astar : public Solver {
 public:
-    
+    // Criação de um mapa para poder calcular a Heuristica
+    Astar(Estados estadoRaiz) : Solver(estadoRaiz){
+        coordenadas[0] = {2, 2}; // Inicialização direta
+        coordenadas[1] = {0, 0};
+        coordenadas[2] = {0, 1};
+        coordenadas[3] = {0, 2};
+        coordenadas[4] = {1, 0};
+        coordenadas[5] = {1, 1};
+        coordenadas[6] = {1, 2};
+        coordenadas[7] = {2, 0};
+        coordenadas[8] = {2, 1};
+    }
+    // Construtor do Pai
+    std::string str = "wdas";
+    std::unordered_map<int, std::vector<int>> coordenadas;
+
+    // Calcula a Heuristica com base no mapa acima, retorna a distancia de Manhattan
+    int heuristic(Estados estado)
+    {
+        int sum = 0; 
+
+        int num;
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                num = estado.tabuleiro[i][j];
+                if(num == 0){continue;}
+                auto coord = this->coordenadas[num];
+
+                int sum_i = abs(coord[0] - i);
+                int sum_j = abs(coord[1] - j);
+
+                sum = sum + sum_i + sum_j;
+            }
+        }
+
+        return sum;
+    }
+
+    // Função que calcula o A*, retorna o Estado Final.
+    Estados solve(){
+
+        this->atual.custo = 0;
+        int minHeuristic = heuristic(this->atual);
+        // Enfilera na Fila de Prioridade com base no valor da Heuristica.
+        filaPrioridadeVisita.push({(-minHeuristic + this->atual.custo), this->atual});
+        mapEstadosVisitados.insert({this->atual.intflatTabuleiro(this->atual.tabuleiro), 1}); // Adiciona o estado PAI no Mapa de lidos com o valor 1.
+
+        // Enquanto a fila não estiver vazia
+        while(!filaPrioridadeVisita.empty()){
+            auto u = filaPrioridadeVisita.top().second; filaPrioridadeVisita.pop(); // Tira o próximo item da fila
+
+            if(u.checkForWin() == false) {   // Se o proximo item NÃO for a vitória
+                for(int i = 0; i < 4; i++) {
+
+                    Estados filho= u.sucessao(str[i]); // Pega o filho dele
+                    filho.custo = u.custo+1; // Adiciona o custo no filho
+                    minHeuristic = heuristic(filho);
+                    minHeuristic += filho.custo;
+                    // Se o filho dele não tiver sido visto, continue
+
+                    if(mapEstadosVisitados.count(filho.intflatTabuleiro(filho.tabuleiro)) == 0){ 
+                        filaPrioridadeVisita.push({-minHeuristic, filho}); // Coloca na fila de prioridade
+                        mapEstadosVisitados.insert({filho.intflatTabuleiro(filho.tabuleiro), u.intflatTabuleiro(u.tabuleiro)}); 
+                        // Adiciona o estado atual no Mapa de lidos e adiciona o id do pai no valor, assim é possível reconstruir o caminho
+                        ++state;
+                    } // Else, proximo filho
+                }
+            } else{return u;} // Retorna o estado de vitória.
+        }
+    }
 };
 
 class BFS : public Solver{
@@ -250,16 +336,20 @@ public:
     DFS(Estados estadoRaiz) : Solver(estadoRaiz) {}
     // Retona o Estado final, recebe o Estado Raiz (PAI) e passa pelo algoritmo BFS.
     Estados solve(){
+        
+        this->atual.custo = 0;
         pilhaVisita.push(this->atual);   
         mapEstadosVisitados.insert({this->atual.intflatTabuleiro(this->atual.tabuleiro), 1}); // Adiciona o estado PAI no Mapa de lidos com o valor 1.
-
+        while(true){
         // Enquanto a fila não estiver vazia
         while(!pilhaVisita.empty()){
-            auto u = pilhaVisita.top(); pilhaVisita.pop(); // Tira o próximo item da fila
 
+            auto u = pilhaVisita.top(); pilhaVisita.pop(); // Tira o próximo item da fila
             if(u.checkForWin() == false) {   // Se o proximo item NÃO for a vitória
                 for(int i = 0; i < 4; i++) {
                     Estados filho = u.sucessao(str[i]); // Pega o filho dele
+                    filho.custo = u.custo + 1;
+                    if(filho.custo > 49){continue;}
                     // Se o filho dele não tiver sido visto, continue
                     if(mapEstadosVisitados.count(filho.intflatTabuleiro(filho.tabuleiro)) == 0){ 
                         pilhaVisita.push(filho); // Empilha o filho para analisar depois
@@ -268,10 +358,11 @@ public:
                         ++state;
                     } // Else, proximo filho
                 }
-            } else{
-                return u;
-            } // Retorna o estado de vitória.
+            } else {
+            return u;
+            }
         }
+    }
     }
 };
 
@@ -280,8 +371,14 @@ public:
 
     void startGame(){
         Estados novoJogo;
-        std::cout << "\033[2J\033[1;1H";
+        //std::cout << "\033[2J\033[1;1H";
         novoJogo.createTabuleiro();
+        Estados estadoInicialGlobal = novoJogo;
+        while(true){
+        std::cout << "\n\n==--==NEW GAME==--== \n" << std::endl;
+        state = 0;
+        mapEstadosVisitados.clear();
+        novoJogo = estadoInicialGlobal;
         novoJogo.imprimeTabuleiro();
 
         std::cout << "Choose an option!\n[1] PLAY\n[2] ALGORITHM" << std::endl;
@@ -292,7 +389,7 @@ public:
 
         switch (input_teclado) {
             case '1':
-                std::cout << "\033[2J\033[1;1H";
+                //std::cout << "\033[2J\033[1;1H";
                 novoJogo.imprimeTabuleiro();
                 while(novoJogo.checkForWin() == false){
                     do {
@@ -313,7 +410,7 @@ public:
                 }
                 break;
             case '2':
-                std::cout << "\033[2J\033[1;1H";
+                //std::cout << "\033[2J\033[1;1H";
                 //novoJogo.imprimeTabuleiro();
                 std::cout << "Choose the algorithm\n[1] A*\n[2] BSF\n[3] DFS" << std::endl;
                 std::cout << "\n>> ";
@@ -323,11 +420,11 @@ public:
                 
                 if(input_teclado2 == 1){
                     std::cout << "\nExecutando..." << std::endl;
-                    // Astar solver(novoJogo); // Cria o objetivo de Solver
-                    // Estados resolvido = solver.solve(); // Recebe o estado resolvido
-                    // resolvido.imprimeTabuleiro();
-                    // solver.reconstrucao(resolvido); // Reconstroi os passos.
-                    exit(0);
+                    Astar solver(novoJogo); // Cria o objetivo de Solver
+                    std:: cout << "Heuristica: " << solver.heuristic(novoJogo) << std::endl;
+                    Estados resolvido = solver.solve(); // Recebe o estado resolvido
+                    resolvido.imprimeTabuleiro();
+                    solver.reconstrucao(resolvido); // Reconstroi os passos.
                 }
 
                 if(input_teclado2 == 2){
@@ -340,13 +437,14 @@ public:
 
                 if(input_teclado2 == 3){
                     std::cout << "\nExecutando..." << std::endl;
-                    BFS solver(novoJogo); // Cria o objetivo de Solver
+                    DFS solver(novoJogo); // Cria o objetivo de Solver
                     Estados resolvido = solver.solve(); // Recebe o estado resolvido
                     resolvido.imprimeTabuleiro();
                     solver.reconstrucao(resolvido); // Reconstroi os passos.
                 }
 
             break;
+        }
         }
         
     }

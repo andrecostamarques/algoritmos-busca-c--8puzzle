@@ -212,6 +212,7 @@ public:
         std::cout << "Quantidade de passos: " << pilhaInt.size() << std::endl; 
         std::cout << "\nPressione ENTER para proximo passo. Pressione ESC para Sair." << std::endl;
 
+        // Loop para printar os pais se for Enter
         pilhaInt.pop();
         while(!pilhaInt.empty() ){
             estadoID = pilhaInt.top(); pilhaInt.pop();
@@ -272,6 +273,7 @@ public:
 
         this->atual.custo = 0;
         int minHeuristic = heuristic(this->atual);
+
         // Enfilera na Fila de Prioridade com base no valor da Heuristica.
         filaPrioridadeVisita.push({(-minHeuristic + this->atual.custo), this->atual});
         mapEstadosVisitados.insert({this->atual.intflatTabuleiro(this->atual.tabuleiro), 1}); // Adiciona o estado PAI no Mapa de lidos com o valor 1.
@@ -340,6 +342,8 @@ public:
         this->atual.custo = 0;
         pilhaVisita.push(this->atual);   
         mapEstadosVisitados.insert({this->atual.intflatTabuleiro(this->atual.tabuleiro), 1}); // Adiciona o estado PAI no Mapa de lidos com o valor 1.
+        
+        // Faz retornar quando a somatória subir mais que 50, ou seja, mais de 50 pais.
         while(true){
         // Enquanto a fila não estiver vazia
         while(!pilhaVisita.empty()){
@@ -349,7 +353,7 @@ public:
                 for(int i = 0; i < 4; i++) {
                     Estados filho = u.sucessao(str[i]); // Pega o filho dele
                     filho.custo = u.custo + 1;
-                    if(filho.custo > 49){continue;}
+                    if(filho.custo > 32){continue;}
                     // Se o filho dele não tiver sido visto, continue
                     if(mapEstadosVisitados.count(filho.intflatTabuleiro(filho.tabuleiro)) == 0){ 
                         pilhaVisita.push(filho); // Empilha o filho para analisar depois
@@ -381,7 +385,7 @@ public:
         novoJogo = estadoInicialGlobal;
         novoJogo.imprimeTabuleiro();
 
-        std::cout << "Choose an option!\n[1] PLAY\n[2] ALGORITHM" << std::endl;
+        std::cout << "Choose an option!\n[1] PLAY\n[2] ALGORITHM\n[3] EXIT" << std::endl;
         std::cout << "\n>> ";
         
         char input_teclado;
@@ -444,6 +448,8 @@ public:
                 }
 
             break;
+                case '3':
+                exit(0);
         }
         }
         
